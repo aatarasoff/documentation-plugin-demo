@@ -37,5 +37,6 @@ class NebulaTestSpecification extends IntegrationSpec {
 
     then:
     executionResult.wasExecuted('documentationDistZip')
+    executionResult.getSuccess()
   }
 }
