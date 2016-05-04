@@ -16,38 +16,25 @@ class TestSpecification extends Specification {
 
   def buildFile
 
-  List<File> pluginClasspath = []
-
   def setup() {
     buildFile = testProjectDir.newFile('build.gradle')
-
-    def pluginClasspathResource = getClass().classLoader.findResource("plugin-classpath.txt")
-    if (pluginClasspathResource == null) {
-      throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
-    }
-
-    pluginClasspath = pluginClasspathResource.readLines()
-        .collect { new File(it) }
   }
 
   def "execution of documentation distribution task is up to date"() {
     given:
-    def classpathString = pluginClasspath
-        .collect { it.absolutePath.replace('\\', '\\\\') }
-        .collect { "'$it'" }
-        .join(", ")
-
     buildFile << """
               buildscript {
                 repositories { jcenter() }
                 dependencies {
-                  classpath files($classpathString)
                   classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3'
                 }
               }
 
+              plugins {
+                  id 'ru.jpoint.documentation'
+              }
+
               apply plugin: 'org.asciidoctor.convert'
-              apply plugin: 'ru.jpoint.documentation'
 
               docs {
                 debug = true
@@ -62,6 +49,7 @@ class TestSpecification extends Specification {
     def result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('documentationDistZip')
+        .withPluginClasspath()
         .build()
 
     then:
